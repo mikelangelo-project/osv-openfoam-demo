@@ -1,0 +1,30 @@
+# Copyright (C) 2017 XLAB, Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+runtime: native
+
+config_set:
+  simplefoam:
+    bootcmd: "/usr/bin/mpirun -n $PARALLELISATION --allow-run-as-root /usr/bin/simpleFoam.so -parallel -case /case"
+    env:
+      PARALLELISATION: 4
+      WM_PROJECT_DIR: /openfoam
+      MPI_BUFFER_SIZE: 1000000
+      PATH: /usr/bin/
+      LD_LIBRARY_PATH: /usr/bin/
+  mount-case:
+    base: "osv.nfs:mount-nfs"
+    env:
+      NFS_MOUNT: /case
+config_set_default: sleep
