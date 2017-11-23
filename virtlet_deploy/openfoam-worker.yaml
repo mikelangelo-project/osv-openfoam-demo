@@ -21,7 +21,7 @@ kind: Deployment
 metadata:
   name: openfoam-worker
 spec:
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       name: openfoam-worker
@@ -34,20 +34,9 @@ spec:
         VirtletCloudInitUserDataScript: |
           run:
             - PUT: /app/
-              command: "/bin/echo.so ------------------------------------------------------------ Worker started."
-            - POST: /env/NFS_ENDPOINT
-              val: 10.192.3.11/case
-            - PUT: /app/
               command: "runscript /run/mount-case"
             - PUT: /app/
-              command: "/bin/echo.so ------------------------------------------------------------ Done mounting NFS."
-
-            - POST: /env/PARALLELISATION
-              val: 4
-            - PUT: /app/
-              command: "runscript /run/simplefoam"
-            - PUT: /app/
-              command: "/bin/echo.so ------------------------------------------------------------ Done running MPI."
+              command: "/bin/echo.so Worker started with NFS mounted to /case."
     spec:
       affinity: {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key": "extraRuntime", "operator": "In", "values": ["virtlet"]}]}]}}}
       containers:
@@ -56,4 +45,23 @@ spec:
           imagePullPolicy: Always
           resources:
             limits:
-              memory: 3096Mi
+              memory: 2048Mi
+
+---
+
+#
+# k8s Service for workers
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: openfoam-worker
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    case: openfoam-worker
+  ports:
+    - name: httpserver
+      port: 8000

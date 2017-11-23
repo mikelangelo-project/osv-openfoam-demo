@@ -18,7 +18,8 @@ FROM openfoamplus/of_v30plus_rhel66
 # PREPARE ENVIRONMENT
 #
 
-RUN yum install -y nfs-utils tree
+RUN yum install -y nfs-utils tree epel-release
+RUN yum install -y jq
 COPY docker_files /
 
 #

@@ -34,3 +34,6 @@ spec:
           imagePullPolicy : IfNotPresent
           securityContext:
             privileged : true
+          env:
+            - name: KUBERNETES_URL
+              value: 10.192.0.2:8080

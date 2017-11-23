@@ -27,4 +27,10 @@ config_set:
     base: "osv.nfs:mount-nfs"
     env:
       NFS_MOUNT: /case
+      NFS_ENDPOINT: nfs.default.svc.cluster.local/case
+      WM_PROJECT_DIR: /openfoam
+      MPI_BUFFER_SIZE: 1000000
+      PATH: /usr/bin/
+      LD_LIBRARY_PATH: /usr/bin/
+
 config_set_default: sleep
