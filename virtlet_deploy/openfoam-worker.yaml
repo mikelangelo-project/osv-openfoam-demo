@@ -41,8 +41,8 @@ spec:
       affinity: {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key": "extraRuntime", "operator": "In", "values": ["virtlet"]}]}]}}}
       containers:
         - name: openfoam-worker
-          image: virtlet.cloud/image-service/openfoam.qemu
-          imagePullPolicy: Always
+          image: virtlet.cloud/s3-eu-west-1.amazonaws.com/osv-openfoam-demo/openfoam-worker.qemu
+          imagePullPolicy: IfNotPresent
           resources:
             limits:
               memory: 2048Mi
