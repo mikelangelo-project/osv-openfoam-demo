@@ -13,18 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-IMAGESERVER_POD="${1:-imageserver-pod-id}"
-
-function fun::compose_and_upload {
-  echo "Composing and uploading openfoam unikernel"
-  capstan package compose openfoam --size=1GB --pull-missing
-
-  echo "Copying to ---image-server---"
-  kubectl cp "$HOME/.capstan/repository/openfoam/openfoam.qemu" "kube-system/$IMAGESERVER_POD:/usr/share/nginx/html/"
-}
-
-#
-# Main
-#
-
-fun::compose_and_upload
+echo "Composing openfoam unikernel"
+capstan package compose openfoam --size=1GB --pull-missing
