@@ -18,7 +18,10 @@ set -o nounset
 set -o pipefail
 set -o errtrace
 
+# Download example FOAM case from Amazon S3
 mkdir -p /example
 curl "https://s3-eu-west-1.amazonaws.com/openfoam-cases/mik3d_15min.tar.gz" > /example/data.tar.gz
+
+# Copy the data to the NFS-shared directory /case where OSv workers will see it.
 tar -xvzf /example/data.tar.gz --directory /case
 echo "Example data was downloaded and extracted to: /case"

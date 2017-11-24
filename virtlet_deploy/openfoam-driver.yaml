@@ -33,7 +33,4 @@ spec:
           image: mikelangelo/openfoam-driver
           imagePullPolicy : IfNotPresent
           securityContext:
-            privileged : true
-          env:
-            - name: KUBERNETES_URL
-              value: 10.192.0.2:8080
+            privileged : true # required by NFS mount
