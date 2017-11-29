@@ -1,0 +1,164 @@
+# Copyright (C) 2017 XLAB, Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# NFS node (Docker container)
+#
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nfs
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: nfs
+      labels:
+        case: nfs
+    spec:
+      containers:
+        - name: nfs
+          image: fuzzle/docker-nfs-server
+          imagePullPolicy : IfNotPresent
+          securityContext:
+            privileged : true
+          env:
+            - name: NFS_EXPORT_DIR_1
+              value: "/case"
+            - name: NFS_EXPORT_DOMAIN_1
+              value: "*"
+            - name: NFS_EXPORT_OPTIONS_1
+              value: "rw,insecure,no_subtree_check,no_root_squash,fsid=1"
+          volumeMounts:
+            - mountPath: /case
+              name: case-volume
+      volumes:
+        - name: case-volume
+          emptyDir: {}
+
+---
+
+#
+# k8s Service for NFS to make it addressible as "nfs.default"
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    case: nfs
+  ports:
+    - name: tcp-111
+      port: 111
+    - name: udp-111
+      protocol: UDP
+      port: 111
+    - name: tcp-2049
+      port: 2049
+    - name: udp-2049
+      protocol: UDP
+      port: 2049
+    - name: tcp-32765
+      port: 32765
+    - name: udp-32765
+      protocol: UDP
+      port: 32765
+    - name: tcp-32766
+      port: 32766
+    - name: udp-32766
+      protocol: UDP
+      port: 32766
+    - name: tcp-32767
+      port: 32767
+    - name: udp-32767
+      protocol: UDP
+      port: 32767
+
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: openfoam-driver
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: openfoam-driver
+      labels:
+        case: openfoam-driver
+    spec:
+      containers:
+        - name: openfoam-driver
+          image: mikelangelo/openfoam-driver
+          imagePullPolicy : IfNotPresent
+          securityContext:
+            privileged : true # required by NFS mount
+
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: openfoam-worker
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: openfoam-worker
+      labels:
+        case: openfoam-worker
+      annotations:
+        kubernetes.io/target-runtime: virtlet.cloud
+        VirtletDiskDriver: virtio
+        VirtletVCPUCount: "2"
+        VirtletCloudInitUserDataScript: |
+          run:
+            - PUT: /app/
+              command: "runscript /run/mount-case"
+            - PUT: /app/
+              command: "/bin/echo.so Worker started with NFS mounted to /case."
+    spec:
+      affinity: {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key": "extraRuntime", "operator": "In", "values": ["virtlet"]}]}]}}}
+      containers:
+        - name: openfoam-worker
+          image: virtlet.cloud/s3-eu-west-1.amazonaws.com/osv-openfoam-demo/openfoam-worker.qemu
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 2048Mi
+
+---
+
+#
+# k8s Service for workers
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: openfoam-worker
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    case: openfoam-worker
+  ports:
+    - name: httpserver
+      port: 8000
